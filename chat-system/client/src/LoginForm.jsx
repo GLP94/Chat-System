@@ -1,40 +1,6 @@
-import React, { useState, useEffect, useRef } from "react"
 import axios from "axios"
 
-export default function App() {
-    const [credentials, setCredentials] = useState({ username: "", password: "" });
-    const [username, setUsername] = useState("");
-    const [message, setMessage] = useState("");
-    const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
-    const [posts, setPosts] = useState([]);
-    const [errorMessage, setErrorMessage] = useState("");
-    const controllerRef = useRef(null);
-
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
-
-        axios.get("/api/verify", {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        })
-            .catch(() => {
-                localStorage.removeItem("token");
-                setLoggedIn(false);
-            })
-    }, []);
-
-    useEffect(() => {
-        try{
-            axios.get("/api/posts")
-                .then(response => setPosts(response.data));
-        }
-        catch(err){
-            setErrorMessage("Unable to fetch posts.");
-            console.error(err);
-        }
-    }, [])
+export default function Form({credentials, setCredentials, controllerRef, setMessage, setLoggedIn, setUsername}){
 
     const handleLogin = async (event) => {
         event.preventDefault();
@@ -47,11 +13,9 @@ export default function App() {
             const response = await axios.post("/api/login", credentials, { signal });
             const token = response.data.token;
 
-            localStorage.setItem("token", token);
-
-            setMessage(response);
-
             if (response.status === 200){
+                localStorage.setItem("token", token);
+                setMessage(response);
                 setLoggedIn(true);
                 setUsername(credentials.username);
             }
@@ -76,18 +40,15 @@ export default function App() {
                 console.error("Error with your request.");
                 console.error(err);
             }
-
             setMessage(err);
         }
         finally{
             setCredentials({username: "", password: ""})
         }
     }
-        
 
-    return (
-        <>
-            <form>
+    return(
+        <form>
                 <label> Username
                     <input
                         type="text"
@@ -106,15 +67,10 @@ export default function App() {
                 </label>
                 <button 
                     type="submit"
-                    onClick={(event) => handleSubmit(event)}
+                    onClick={(event) => handleLogin(event)}
                 >
                     Login
                 </button>
             </form>
-
-            <main>
-                <p>Welcome, {username ? username : "Guest"}!</p>
-            </main>
-        </>
     )
 }
