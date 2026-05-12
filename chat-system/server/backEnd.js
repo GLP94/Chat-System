@@ -1,13 +1,13 @@
 import Chat from "./models/Chat.js"
-import Users from "./models/Users.js"
+import User from "./models/User.js"
 
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import initialDBSetup from "./initialDBSetup.js";
+import bcrypt from "bcrypt"
 
 const port = 5000;
-
 const app = express();
 
 app.use(express.json());
@@ -22,37 +22,87 @@ mongoose.connect('mongodb://127.0.0.1:27017/chatDB', {
     return initialDBSetup();
 });
 
-/* Users Fetch */
+/* User Sign Up */
 
-app.post("/api/verification", async (req, res) => {
-    try{
-        const {username, password} = req.body;
-        const userFound = await Users.findOne({username, password});
-        if (!userFound){
-            res.status(401).send("User not found!");
-            return;
+app.post("/api/registration", async (req, res, next) => {
+    const user = new User({
+        username: req.body.username,
+        password: req.body.password
+    });
+
+    try {
+        if (user.username.length < 4 ||
+            user.username.length > 16 ||
+            user.password.length < 4 ||
+            user.password.length > 16
+        ) {
+            return res.status(400).json({ message: "Password/Username too short/long" });
         }
-        res.status(200).send("Verified!")
+
+        await user.save();
+        return res.status(201).json(user);
     }
-    catch(err){
-        console.error(err);
+    catch (err) {
+        next(err);
     }
 })
+
+/* User Sign In */
+
+app.post("/api/verification", async (req, res, next) => {
+    const { username, password } = req.body;
+    try {
+        const userFound = await User.findOne({ username });
+        if (!userFound) {
+            return res.status(401).json({ message: "User not found!" });
+        }
+        if (!await bcrypt.compare(userFound.password, password)){
+            return res.status(400).json({ message: "Password invalid!"})
+        }
+        return res.status(200).json({ username });
+    }
+    catch (err) {
+        next(err);
+    }
+});
 
 /* Posts Fetch */
 
-app.get("/api/posts", async (req, res) => {
-    try{
+app.get("/api/posts", async (req, res, next) => {
+    try {
         const chat = await Chat.find();
-        res.status(200).json(chat);
+        return res.status(200).json(chat);
     }
-    catch(err){
-        console.error(err);
+    catch (err) {
+        next(err);
     }
-})
+});
 
 /* Server Listen */
 
 app.listen(port, () => {
     console.log(`Server listening to PORT ${port}`)
+});
+
+/* Error Handling */
+
+app.use((err, req, res, next) => {
+    console.error(`Path: ${req.path}`)
+    console.error(`Stack ${err.stack}`);
+
+    if (err.code === 11000){
+        return res.status(
+            err.status || 400
+        ).json({
+            error: true,
+            message: "Username/Password already present."
+        });
+    }
+
+    return res.status(
+        err.status || 500
+    ).json({
+        error: true,
+        message: err.status < 500 ? err.message : "Internal server error."
+    });
 });

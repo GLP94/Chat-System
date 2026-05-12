@@ -1,10 +1,11 @@
 import { useState } from "react"
 import axios from "axios"
 
-export default function Form({controllerRef, setMessage, setLoggedIn, setUsername}){
+export default function SignupForm({ controllerRef, setUsername, setLoggedIn, setMessage }) {
+
     const [credentials, setCredentials] = useState({ username: "", password: "" });
 
-    const handleLogin = async (event) => {
+    const handleSignup = async (event) => {
 
         event.preventDefault();
 
@@ -13,29 +14,26 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
         const signal = controllerRef.current.signal;
 
         try {
-            const response = await axios.post("/api/login", credentials, { signal });
-            const token = response.data.token;
-
-            if (response.status === 200){
-                localStorage.setItem("token", token);
-                setLoggedIn(true);
+            const response = axios.post("/api/registration", credentials, { signal });
+            if (response.status === 201) {
                 setUsername(response.data.username);
+                setLoggedIn(true);
             }
-            else {
-                setMessage(response.message);
+            else{
+                setMessage(response.data.message);
                 return;
             }
         }
-        catch(err){
-            if (axios.isAxiosError(err)){
+        catch (err) {
+            if (axios.isAxiosError(err)) {
                 console.error("Axios has encountered an error");
                 console.error(err);
             }
-            else if (err.response){
+            else if (err.response) {
                 console.error("Server declined request.");
                 console.error(err)
             }
-            else if (err.request){
+            else if (err.request) {
                 console.error("Server could not respond to request.");
                 console.error(err);
             }
@@ -43,20 +41,22 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
                 console.error("Error with your request.");
                 console.error(err);
             }
-            setMessage(err);
         }
-        finally{
-            setCredentials({username: "", password: ""})
+        finally {
+            setCredentials({ username: "", password: "" })
         }
+
     }
 
-    return(
+    return (
         <form>
             <label> Username
                 <input
                     type="text"
                     name="username"
                     value={credentials.username}
+                    min={4}
+                    max={16}
                     onChange={(event) => setCredentials({ ...credentials, username: event.target.value })}
                 />
             </label>
@@ -65,14 +65,16 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
                     type="text"
                     name="password"
                     value={credentials.password}
+                    min={4}
+                    max={16}
                     onChange={(event) => setCredentials({ ...credentials, password: event.target.value })}
                 />
             </label>
-            <button 
+            <button
                 type="submit"
-                onClick={(event) => handleLogin(event)}
+                onClick={(event) => handleSignup(event)}
             >
-                Login
+                Signup
             </button>
         </form>
     )
