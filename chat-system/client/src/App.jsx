@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from "react"
 import axios from "axios"
-import LoginForm from "./LoginForm.jsx"
-import SignupForm from "./SignupForm.jsx"
+
+import Header from "./components/Header.jsx";
+import MessageModal from "./components/MessageModal.jsx";
+import LoginForm from "./LoginForm.jsx";
+import SignupForm from "./SignupForm.jsx";
+import Chat from "./Chat.jsx"
 
 export default function App() {
     const [username, setUsername] = useState("");
@@ -14,71 +18,55 @@ export default function App() {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        axios
-        .get("/api/verification", {
+        axios.get("/api/verification", {
             headers: {
                 Authorization: `Bearer ${token}`
             }
-        })
-        .catch(() => {
+        }).catch(() => {
             localStorage.removeItem("token");
             setLoggedIn(false);
         })
-
     }, []);
 
     useEffect(() => {
-        try{
-            axios
-            .get("/api/posts")
-            .then(response => setPosts(response.data));
+        try {
+            axios.get("/api/posts")
+                .then(response => setPosts(response.data));
         }
-        catch(err){
+        catch (err) {
             console.error(err);
         }
     }, [])
-        
+
     return (
-        <main>
-            <header>
-                {loggedIn 
-                ?
-                <section>
-                    <p>Sign in!</p>
-                    <LoginForm 
-                        prop={{
-                            controllerRef, 
-                            setMessage, 
-                            setLoggedIn, 
-                            setUsername
-                        }}
-                    >
-                    </LoginForm>
-                    <p>Sign up!</p>
-                    <SignupForm
-                        prop={{
-                            setUsername,
-                            setLoggedIn,
-                            setMessage
-                        }}
-                    ></SignupForm>
-                </section>
-                :
-                <p>Welcome, {username}!</p>
-                }
-            </header>
-            <div>
-                {message}
-            </div>
-            <main>
-                {posts.map(p => (
-                    <div key={p._id}>
-                        <p>{p.user}</p>
-                        <p>{String(p.time)}</p>
-                        <p>{p.content}</p>
-                    </div>
-                ))}
-            </main>
-        </main>
+        <>
+            <Header
+                loggedIn={loggedIn}
+                username={username}
+
+            >
+                <LoginForm
+                    controllerRef={controllerRef}
+                    setMessage={setMessage}
+                    setLoggedIn={setLoggedIn}
+                    setUsername={setUsername}
+                >
+                </LoginForm>
+                <SignupForm
+                    controllerRef={controllerRef}
+                    setUsername={setUsername}
+                    setLoggedIn={setLoggedIn}
+                    setMessage={setMessage}
+                ></SignupForm>
+            </Header>
+            <MessageModal 
+                message={message}
+            />
+            <Chat 
+                posts={posts}
+                username={username}
+                setMessage={setMessage}
+            />
+        </>
     )
 }

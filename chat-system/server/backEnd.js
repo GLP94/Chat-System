@@ -24,49 +24,56 @@ mongoose.connect('mongodb://127.0.0.1:27017/chatDB', {
 
 /* User Sign Up */
 
-app.post("/api/registration", async (req, res, next) => {
-    const user = new User({
-        username: req.body.username,
-        password: req.body.password
-    });
+const handleSignUp = async (req, res, next) => {
+    if (req.body.username.length < 4 ||
+        req.body.username.length > 16 ||
+        req.body.password.length < 4 ||
+        req.body.password.length > 16
+    ) {
+        return res.status(400).json({ message: "Password/Username too short/long" });
+    };
 
     try {
-        if (user.username.length < 4 ||
-            user.username.length > 16 ||
-            user.password.length < 4 ||
-            user.password.length > 16
-        ) {
-            return res.status(400).json({ message: "Password/Username too short/long" });
-        }
+        const user = new User({
+            username: req.body.username,
+            password: req.body.password
+        });
 
         await user.save();
-        return res.status(201).json(user);
+        res.locals.username = user.username;
+        next();
     }
     catch (err) {
         next(err);
     }
-})
+}
+
+app.post("/api/registration", handleSignUp, (req, res) => {
+    return res.status(201).json({ username: res.locals.username, message: "Successful Signup!" });
+});
 
 /* User Sign In */
 
-app.post("/api/verification", async (req, res, next) => {
+const signIn = async function (req, res, next) {
     const { username, password } = req.body;
     try {
         const userFound = await User.findOne({ username });
         if (!userFound) {
             return res.status(401).json({ message: "User not found!" });
         }
-        if (!await bcrypt.compare(userFound.password, password)){
-            return res.status(400).json({ message: "Password invalid!"})
+        if (!await bcrypt.compare(password, userFound.password)) {
+            return res.status(400).json({ message: "Password invalid!" })
         }
         return res.status(200).json({ username });
     }
     catch (err) {
         next(err);
     }
-});
+}
 
-/* Posts Fetch */
+app.post("/api/verification", signIn);
+
+/* Posts */
 
 app.get("/api/posts", async (req, res, next) => {
     try {
@@ -77,6 +84,10 @@ app.get("/api/posts", async (req, res, next) => {
         next(err);
     }
 });
+
+app.post("/api/posts", async (req, res, next) => {
+    const { username, post } = req.body;
+})
 
 /* Server Listen */
 
@@ -90,7 +101,7 @@ app.use((err, req, res, next) => {
     console.error(`Path: ${req.path}`)
     console.error(`Stack ${err.stack}`);
 
-    if (err.code === 11000){
+    if (err.code === 11000) {
         return res.status(
             err.status || 400
         ).json({
