@@ -4,16 +4,21 @@ import axios from "axios"
 export default function Chat({ posts, username, setMessage }) {
     const [post, setPost] = useState("");
 
-    async function handlePost() {
-        const newPost = {username, post}
+    async function handlePost(event) {
+        event.preventDefault();
 
-        try{
+        const newPost = {
+            username: username,
+            post: post
+        }
+
+        try {
             const response = await axios.post("/api/posts", newPost);
-            if (response.status === 200){
+            if (response.status === 201) {
                 return setMessage(response.data);
             }
         }
-        catch(err){
+        catch (err) {
             setMessage(err.message);
             console.error(err);
         }
@@ -22,8 +27,24 @@ export default function Chat({ posts, username, setMessage }) {
 
     return (
         <main>
+            {posts.map(p => (
+                <div key={p._id}>
+                    <p>
+                        <span>{p.username}</span>
+                        -
+                        <span>{p.time.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric"
+                        })}
+                        </span>
+                    </p>
+                    <p>{p.content}</p>
+                </div>
+            ))}
             <form
-                OnSubmit={handlePost}
+                OnSubmit={(event) => handlePost(event)}
             >
                 <input
                     type="text"
@@ -38,13 +59,6 @@ export default function Chat({ posts, username, setMessage }) {
                     Send
                 </button>
             </form>
-            {posts.map(p => (
-                <div key={p._id}>
-                    <p>{p.user}</p>
-                    <p>{String(p.time)}</p>
-                    <p>{p.content}</p>
-                </div>
-            ))}
         </main>
     )
 }

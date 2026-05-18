@@ -5,7 +5,6 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import initialDBSetup from "./initialDBSetup.js";
-import bcrypt from "bcrypt"
 
 const port = 5000;
 const app = express();
@@ -25,10 +24,13 @@ mongoose.connect('mongodb://127.0.0.1:27017/chatDB', {
 /* User Sign Up */
 
 const handleSignUp = async (req, res, next) => {
-    if (req.body.username.length < 4 ||
-        req.body.username.length > 16 ||
-        req.body.password.length < 4 ||
-        req.body.password.length > 16
+    const { username, password } = req.body;
+
+    if (!username || !password ||
+        password.length < 4 ||
+        password.length > 16 ||
+        username.length < 4 ||
+        username.length > 16
     ) {
         return res.status(400).json({ message: "Password/Username too short/long" });
     };
@@ -46,7 +48,7 @@ const handleSignUp = async (req, res, next) => {
     catch (err) {
         next(err);
     }
-}
+};
 
 app.post("/api/registration", handleSignUp, (req, res) => {
     return res.status(201).json({ username: res.locals.username, message: "Successful Signup!" });
@@ -56,24 +58,31 @@ app.post("/api/registration", handleSignUp, (req, res) => {
 
 const signIn = async function (req, res, next) {
     const { username, password } = req.body;
+
     try {
         const userFound = await User.findOne({ username });
+
         if (!userFound) {
             return res.status(401).json({ message: "User not found!" });
         }
-        if (!await bcrypt.compare(password, userFound.password)) {
+        if (!await userFound.passwordCheck(password)) {
             return res.status(400).json({ message: "Password invalid!" })
         }
+
+        if (await userFound.banned){
+            return res.status(400).json({message: "Account has been banned."})
+        }
+
         return res.status(200).json({ username });
     }
     catch (err) {
         next(err);
     }
-}
+};
 
 app.post("/api/verification", signIn);
 
-/* Posts */
+/* Posts GET */
 
 app.get("/api/posts", async (req, res, next) => {
     try {
@@ -85,9 +94,32 @@ app.get("/api/posts", async (req, res, next) => {
     }
 });
 
-app.post("/api/posts", async (req, res, next) => {
+/* Posts POST */
+
+const handleNewPost = async function(req, res, next) {
     const { username, post } = req.body;
-})
+
+    if (!post || post.length === 0){
+        return res.status(401).json({message: "Missing Post!"})
+    }
+
+    try{
+        const newPost = new Chat({
+            username: username,
+            post: post,
+        });
+        await newPost.save();
+        res.locals.newPost = newPost;
+        next();
+    }
+    catch(err){
+        next(err);
+    }
+}
+
+app.post("/api/posts", handleNewPost, async (req, res) => {
+    res.status(201).json(res.locals.newPost);
+});
 
 /* Server Listen */
 
@@ -106,7 +138,7 @@ app.use((err, req, res, next) => {
             err.status || 400
         ).json({
             error: true,
-            message: "Username/Password already present."
+            message: "Username already used."
         });
     }
 
