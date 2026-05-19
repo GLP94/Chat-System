@@ -1,12 +1,12 @@
+import "dotenv/config";
+
 import Chat from "./models/Chat.js"
 import User from "./models/User.js"
 
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import initialDBSetup from "./initialDBSetup.js";
 
-const port = 5000;
 const app = express();
 
 app.use(express.json());
@@ -14,12 +14,22 @@ app.use(cors({
     origin: 'http://localhost:3000',
 }));
 
-mongoose.connect('mongodb://127.0.0.1:27017/chatDB', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(async () => {
-    return initialDBSetup();
-});
+const databaseConnection = async function(){
+    try{
+        await mongoose.connect(process.env.URI || "mongodb://127.0.0.1:27017/chatDB");
+
+        const PORT = process.env.PORT;
+        app.listen(PORT || 5000, () => {
+            console.log(`Server listening - PORT: ${PORT || 5000}`)
+        })
+    }
+    catch(err){
+        console.error(`Server error.`);
+        console.error(err);
+    }
+};
+
+databaseConnection();
 
 /* User Sign Up */
 
@@ -32,7 +42,7 @@ const handleSignUp = async (req, res, next) => {
         username.length < 4 ||
         username.length > 16
     ) {
-        return res.status(400).json({ message: "Password/Username too short/long" });
+        return res.status(400).json({ message: "Invalid credentials." });
     };
 
     try {
@@ -63,17 +73,20 @@ const signIn = async function (req, res, next) {
         const userFound = await User.findOne({ username });
 
         if (!userFound) {
-            return res.status(401).json({ message: "User not found!" });
-        }
-        if (!await userFound.passwordCheck(password)) {
-            return res.status(400).json({ message: "Password invalid!" })
+            return res.status(401).json({ message: "Invalid credentials." });
         }
 
-        if (await userFound.banned){
+        if (!await userFound.passwordCheck(password)) {
+            return res.status(400).json({ message: "Invalid credentials." })
+        }
+
+        if (userFound.banned.isBanned){
             return res.status(400).json({message: "Account has been banned."})
         }
 
-        return res.status(200).json({ username });
+        const token = userFound.authentication();
+
+        return res.status(200).json({ username, token });
     }
     catch (err) {
         next(err);
@@ -119,12 +132,6 @@ const handleNewPost = async function(req, res, next) {
 
 app.post("/api/posts", handleNewPost, async (req, res) => {
     res.status(201).json(res.locals.newPost);
-});
-
-/* Server Listen */
-
-app.listen(port, () => {
-    console.log(`Server listening to PORT ${port}`)
 });
 
 /* Error Handling */

@@ -1,6 +1,16 @@
-import chatSchema from "../schemas/chatSchema.js"
 import mongoose from "mongoose";
 
-const chat = mongoose.model("Chat", chatSchema);
+const chatSchema = new mongoose.Schema({
+    post: {
+        type: String,
+        required: true,
+        maxLength: 1000
+    },
+    username: String,
+    time: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-export default chat;
+export default mongoose.model("Chat", chatSchema);
