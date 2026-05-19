@@ -22,7 +22,6 @@ export default function Chat({ posts, username, setMessage }) {
             setMessage(err.message);
             console.error(err);
         }
-
     }
 
     return (
