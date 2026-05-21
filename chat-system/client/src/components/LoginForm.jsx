@@ -1,8 +1,10 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import axios from "axios"
 
 export default function Form({controllerRef, setMessage, setLoggedIn, setUsername}){
     const [credentials, setCredentials] = useState({ username: "", password: "" });
+    const navigate = useNavigate();
 
     const handleLogin = async (event) => {
 
@@ -20,6 +22,7 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
                 localStorage.setItem("token", token);
                 setLoggedIn(true);
                 setUsername(response.data.username);
+                navigate("/chat");
             }
             else {
                 setMessage(response.message);
@@ -51,7 +54,7 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
     }
 
     return(
-        <form>
+        <form onSubmit={(event) => handleLogin(event)}>
             <label> Username
                 <input
                     type="text"
@@ -70,7 +73,6 @@ export default function Form({controllerRef, setMessage, setLoggedIn, setUsernam
             </label>
             <button 
                 type="submit"
-                onClick={(event) => handleLogin(event)}
             >
                 Login
             </button>

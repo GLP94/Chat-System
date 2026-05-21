@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { browserRouter as Router, Routes, Route } from "react-router-dom"
 import axios from "axios"
 
 import Header from "./components/Header.jsx";
@@ -11,14 +12,13 @@ export default function App() {
     const [username, setUsername] = useState("");
     const [message, setMessage] = useState("");
     const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
-    const [posts, setPosts] = useState([]);
     const controllerRef = useRef(null);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        axios.get("/api/verification", {
+        axios.get("/tokenVerify", {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -28,45 +28,42 @@ export default function App() {
         })
     }, []);
 
-    useEffect(() => {
-        try {
-            axios.get("/api/posts")
-                .then(response => setPosts(response.data));
-        }
-        catch (err) {
-            console.error(err);
-        }
-    }, [])
-
     return (
-        <>
+        <Router >
             <Header
                 loggedIn={loggedIn}
                 username={username}
-
             >
-                <LoginForm
-                    controllerRef={controllerRef}
-                    setMessage={setMessage}
-                    setLoggedIn={setLoggedIn}
-                    setUsername={setUsername}
-                >
-                </LoginForm>
-                <SignupForm
-                    controllerRef={controllerRef}
-                    setUsername={setUsername}
-                    setLoggedIn={setLoggedIn}
-                    setMessage={setMessage}
-                ></SignupForm>
             </Header>
             <MessageModal 
                 message={message}
             />
-            <Chat 
-                posts={posts}
-                username={username}
-                setMessage={setMessage}
-            />
-        </>
+            <Routes>
+                <Route path="/chat" element={
+                    <Chat 
+                        loggedIn={loggedIn}
+                        username={username}
+                        setMessage={setMessage}
+                    />
+                } />
+                <Route path="/signIn" element={
+                    <LoginForm
+                    controllerRef={controllerRef}
+                    setMessage={setMessage}
+                    setLoggedIn={setLoggedIn}
+                    setUsername={setUsername}
+                    />
+                } />
+                <Route path="/signUp" element={
+                    <SignupForm
+                        controllerRef={controllerRef}
+                        setUsername={setUsername}
+                        setLoggedIn={setLoggedIn}
+                        setMessage={setMessage}
+                    /> 
+                } />
+                <Route path="*" element={<Error />} />
+            </Routes>
+        </Router>
     )
 }

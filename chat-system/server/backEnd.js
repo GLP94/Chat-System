@@ -6,6 +6,7 @@ import User from "./models/User.js"
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+import jwt from "jsonwebtoken";
 
 const app = express();
 
@@ -60,7 +61,7 @@ const handleSignUp = async (req, res, next) => {
     }
 };
 
-app.post("/api/registration", handleSignUp, (req, res) => {
+app.post("/SignUp", handleSignUp, (req, res) => {
     return res.status(201).json({ username: res.locals.username, message: "Successful Signup!" });
 });
 
@@ -80,11 +81,11 @@ const signIn = async function (req, res, next) {
             return res.status(400).json({ message: "Invalid credentials." })
         }
 
-        if (userFound.banned.isBanned){
+        if (userFound.isBanned){
             return res.status(400).json({message: "Account has been banned."})
         }
 
-        const token = userFound.authentication();
+        const token = userFound.authenticate();
 
         return res.status(200).json({ username, token });
     }
@@ -93,7 +94,15 @@ const signIn = async function (req, res, next) {
     }
 };
 
-app.post("/api/verification", signIn);
+app.post("/singIn", signIn);
+
+/* Token Verify */
+
+const tokenVerification = async (req, res) => {
+    const result = await jwt.verify(req.headers.)
+}
+
+app.get("/tokenVerify",)
 
 /* Posts GET */
 

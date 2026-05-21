@@ -1,12 +1,18 @@
-export default function Header({ children, loggedIn, username }) {
+import { Link } from "react-router-dom"
+
+export default function Header({ loggedIn, username }) {
     return (
         <header>
             {!loggedIn
                 ?
-                children
+                <nav>
+                    <Link to="/signIn">Sign In</Link>
+                    <Link to="/signUp">Sign Up</Link>
+                </nav>
                 :
                 <p>Welcome, {username}!</p>
+                <Link to="/:"
             }
         </header>
     )
-}
+};

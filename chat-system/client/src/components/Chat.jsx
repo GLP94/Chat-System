@@ -1,19 +1,21 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 import axios from "axios"
 
-export default function Chat({ posts, username, setMessage }) {
-    const [post, setPost] = useState("");
+export default function Chat({ loggedIn, username, setMessage }) {
+    const [newPost, setNewPost] = useState("");
+    const [posts, setPosts] = useState("");
 
     async function handlePost(event) {
         event.preventDefault();
 
-        const newPost = {
+        const postRequest = {
             username: username,
-            post: post
+            content: newPost
         }
 
         try {
-            const response = await axios.post("/api/posts", newPost);
+            const response = await axios.post("/api/posts", postRequest);
             if (response.status === 201) {
                 return setMessage(response.data);
             }
@@ -24,40 +26,64 @@ export default function Chat({ posts, username, setMessage }) {
         }
     }
 
+    useEffect(() => {
+        try {
+            axios.get("/api/posts")
+                .then(response => setPosts(response.data));
+        }
+        catch (err) {
+            console.error(err);
+        }
+    }, [])
+
     return (
         <main>
-            {posts.map(p => (
-                <div key={p._id}>
-                    <p>
-                        <span>{p.username}</span>
-                        -
-                        <span>{p.time.toLocaleDateString("en-US", {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric"
-                        })}
-                        </span>
-                    </p>
-                    <p>{p.content}</p>
-                </div>
-            ))}
-            <form
-                OnSubmit={(event) => handlePost(event)}
-            >
-                <input
-                    type="text"
-                    name="post"
-                    value={post}
-                    onChange={(event) => setPost(event.target.value)}
-                >
-                </input>
-                <button
-                    type="submit"
-                >
-                    Send
-                </button>
-            </form>
+            <section>
+                {
+                    !loggedIn ?
+                        <div>
+                            <Link to="/signIn">Sign In</Link>
+                            <span>or</span>
+                            <Link to="/signUp">Sign Up</Link>
+                            <span>to use the chat</span>
+                        </div>
+                        :
+                        (posts || []).map(p => (
+                            <div key={p._id}>
+                                <p>
+                                    <span>{p.username}</span>
+                                    -
+                                    <span>{new Date(p.time).toLocaleDateString("en-US", {
+                                        weekday: "short",
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric"
+                                    })}
+                                    </span>
+                                </p>
+                                <p>{p.post}</p>
+                            </div>
+                        ))}
+            </section>
+            {
+                loggedIn &&
+                    <form
+                        onSubmit={(event) => handlePost(event)}
+                    >
+                        <input
+                            type="text"
+                            name="post"
+                            value={newPost}
+                            onChange={(event) => setNewPost(event.target.value)}
+                        >
+                        </input>
+                        <button
+                            type="submit"
+                        >
+                            Send
+                        </button>
+                    </form>
+            }
         </main>
     )
 }

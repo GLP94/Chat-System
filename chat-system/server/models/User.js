@@ -18,10 +18,6 @@ const userSchema = new mongoose.Schema({
     },
     banned: {
         _id: false,
-        isBanned: {
-            type: Boolean,
-            default: false
-        },
         reason: {
             type: String,
             default: null,
@@ -30,15 +26,17 @@ const userSchema = new mongoose.Schema({
         time: {
             type: Date,
             default: null,
+            required: true
         }
+    },
+    role: {
+        type: String,
+        default: "User"
     }
 });
 
-userSchema.methods.ban = async function(reason){
-    this.banned.isBanned = true;
-    this.banned.reason = reason;
-    this.banned.time = Date.now;
-    return await this.save();
+userSchema.methods.isBanned = async function(){
+    return !!this.banned.time;
 };
 
 userSchema.methods.passwordCheck = async function(passedPassword){
@@ -53,7 +51,7 @@ userSchema.methods.authentication = function(){
     };
 
     const token = jwt.sign(user, process.env.AUTH_KEY, {
-        expiresIn: "2 days"
+        expiresIn: "7day"
     });
 
     return token;
