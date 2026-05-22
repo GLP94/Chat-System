@@ -11,7 +11,6 @@ export default function Header({ loggedIn, username }) {
                 </nav>
                 :
                 <p>Welcome, {username}!</p>
-                <Link to="/:"
             }
         </header>
     )

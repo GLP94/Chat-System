@@ -96,13 +96,27 @@ const signIn = async function (req, res, next) {
 
 app.post("/singIn", signIn);
 
-/* Token Verify */
+/* Token Verification */
 
-const tokenVerification = async (req, res) => {
-    const result = await jwt.verify(req.headers.)
-}
+const tokenVerification = async function(req, res, next){
+    if (!req.headers.authorization) return res.status(401).json({message:"Token invalid."});
+    try{
+        const token = req.headers.authorization.split(" ")[1];
+        const verify = jwt.verify(token, process.env.AUTH_KEY);
+        const userFound = await User.findById(verify._id);
+        if (!userFound) return res.status(401).json({message:"Token invalid."});
+        
+        res.locals.ver = verify;
+        next();
+    }
+    catch(err){
+        next(err);
+    }   
+};
 
-app.get("/tokenVerify",)
+app.get("/tokenVerify", tokenVerification, (req, res) => {
+    res.status(200).json(res.locals.ver.username);
+});
 
 /* Posts GET */
 

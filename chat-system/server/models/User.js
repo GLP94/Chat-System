@@ -44,7 +44,6 @@ userSchema.methods.passwordCheck = async function(passedPassword){
 };
 
 userSchema.methods.authentication = function(){
-
     const user = {
         _id: this._id,
         username: this.username
