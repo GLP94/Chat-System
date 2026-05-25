@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { browserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import axios from "axios"
 
 import Header from "./components/Header.jsx";
@@ -7,25 +7,44 @@ import MessageModal from "./components/MessageModal.jsx";
 import LoginForm from "./LoginForm.jsx";
 import SignupForm from "./SignupForm.jsx";
 import Chat from "./Chat.jsx"
+import UserPage from "./UserPage.jsx"
+import Loading from "./Loading.jsx"
+import Error from "./Error.jsx"
 
 export default function App() {
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useState("Guest");
     const [message, setMessage] = useState("");
     const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
+    const [loading, setLoading] = useState(true);
     const controllerRef = useRef(null);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        const tokenVerification = async function () {
+            const token = localStorage.getItem("token");
+            if (!token){
+                setLoading(false);
+                return;
+            };
 
-        axios.get("/tokenVerify", {
-            headers: {
-                Authorization: `Bearer ${token}`
+            try {
+                const response = await axios.get("/tokenVerify", {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setUsername(response.data);
+                setLoggedIn(true);
             }
-        }).catch(() => {
-            localStorage.removeItem("token");
-            setLoggedIn(false);
-        })
+            catch (err) {
+                console.error(`Error with the Token verification: ${err}`);
+                localStorage.removeItem("token");
+            }
+            finally{
+                setLoading(false);
+            }
+        }
+
+        tokenVerification();
     }, []);
 
     return (
@@ -35,35 +54,42 @@ export default function App() {
                 username={username}
             >
             </Header>
-            <MessageModal 
+            <MessageModal
                 message={message}
             />
-            <Routes>
-                <Route path="/chat" element={
-                    <Chat 
-                        loggedIn={loggedIn}
-                        username={username}
-                        setMessage={setMessage}
-                    />
-                } />
-                <Route path="/signIn" element={
-                    <LoginForm
-                    controllerRef={controllerRef}
-                    setMessage={setMessage}
-                    setLoggedIn={setLoggedIn}
-                    setUsername={setUsername}
-                    />
-                } />
-                <Route path="/signUp" element={
-                    <SignupForm
-                        controllerRef={controllerRef}
-                        setUsername={setUsername}
-                        setLoggedIn={setLoggedIn}
-                        setMessage={setMessage}
-                    /> 
-                } />
-                <Route path="*" element={<Error />} />
-            </Routes>
+            {
+                loading
+                    ?
+                    <Loading />
+                    :
+                    <Routes>
+                        <Route path="/chat" element={
+                            <Chat
+                                loggedIn={loggedIn}
+                                username={username}
+                                setMessage={setMessage}
+                            />
+                        } />
+                        <Route path="/signIn" element={
+                            <LoginForm
+                                controllerRef={controllerRef}
+                                setMessage={setMessage}
+                                setLoggedIn={setLoggedIn}
+                                setUsername={setUsername}
+                            />
+                        } />
+                        <Route path="/signUp" element={
+                            <SignupForm
+                                controllerRef={controllerRef}
+                                setUsername={setUsername}
+                                setLoggedIn={setLoggedIn}
+                                setMessage={setMessage}
+                            />
+                        } />
+                        <Route path="/userPage/:username" element={<UserPage />} />
+                        <Route path="*" element={<Error />} />
+                    </Routes>
+            }
         </Router>
     )
 }

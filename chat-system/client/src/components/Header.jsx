@@ -10,8 +10,12 @@ export default function Header({ loggedIn, username }) {
                     <Link to="/signUp">Sign Up</Link>
                 </nav>
                 :
-                <p>Welcome, {username}!</p>
+                <nav>
+                    <p>Welcome, {username}!</p>
+                    <button onClick={() => LogOut()} >Log Out</button>
+                    <Link to={`/userPage/${username}`}>User Page</Link>
+                </nav>
             }
         </header>
     )
-};
+}

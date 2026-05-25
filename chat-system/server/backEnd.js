@@ -61,7 +61,7 @@ const handleSignUp = async (req, res, next) => {
     }
 };
 
-app.post("/SignUp", handleSignUp, (req, res) => {
+app.post("/api/signUp", handleSignUp, (req, res) => {
     return res.status(201).json({ username: res.locals.username, message: "Successful Signup!" });
 });
 
@@ -94,7 +94,7 @@ const signIn = async function (req, res, next) {
     }
 };
 
-app.post("/singIn", signIn);
+app.post("/api/singIn", signIn);
 
 /* Token Verification */
 
@@ -114,7 +114,7 @@ const tokenVerification = async function(req, res, next){
     }   
 };
 
-app.get("/tokenVerify", tokenVerification, (req, res) => {
+app.get("/api/tokenVerify", tokenVerification, (req, res) => {
     res.status(200).json(res.locals.ver.username);
 });
 
