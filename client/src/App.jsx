@@ -4,12 +4,12 @@ import axios from "axios"
 
 import Header from "./components/Header.jsx";
 import MessageModal from "./components/MessageModal.jsx";
-import LoginForm from "./LoginForm.jsx";
-import SignupForm from "./SignupForm.jsx";
-import Chat from "./Chat.jsx"
-import UserPage from "./UserPage.jsx"
-import Loading from "./Loading.jsx"
-import Error from "./Error.jsx"
+import LoginForm from "./LoginForm.js";
+import SignupForm from "./SignupForm.js";
+import Chat from "./Chat.js"
+import UserPage from "./UserPage.js"
+import Loading from "./Loading.js"
+import Error from "./Error.js"
 
 export default function App() {
     const [username, setUsername] = useState("Guest");
