@@ -3,13 +3,14 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import axios from "axios"
 
 import Header from "./components/Header.jsx";
-import MessageModal from "./components/MessageModal.jsx";
-import LoginForm from "./LoginForm.js";
-import SignupForm from "./SignupForm.js";
-import Chat from "./Chat.js"
-import UserPage from "./UserPage.js"
-import Loading from "./Loading.js"
-import Error from "./Error.js"
+import MessageDialog from "./components/MessageDialog.jsx";
+import LoadingDialog from "./components/LoadingDialog.jsx";
+import LoginForm from "./components/LoginForm.js";
+import SignupForm from "./components/SignupForm.js";
+import Chat from "./components/Chat.js"
+import UserPage from "./components/UserPage.js"
+import Loading from "./components/Loading.js"
+import Error from "./components/Error.js"
 
 export default function App() {
     const [username, setUsername] = useState("Guest");
@@ -18,6 +19,7 @@ export default function App() {
     const [loading, setLoading] = useState(true);
     const controllerRef = useRef(null);
 
+    /* Token Verification on Startup */
     useEffect(() => {
         const tokenVerification = async function () {
             const token = localStorage.getItem("token");
@@ -54,7 +56,10 @@ export default function App() {
                 username={username}
             >
             </Header>
-            <MessageModal
+            <LoadingDialog 
+                loading={loading}
+            />
+            <MessageDialog
                 message={message}
             />
             {

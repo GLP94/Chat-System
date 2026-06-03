@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import mongoose from "mongoose";
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken";
@@ -46,6 +47,8 @@ userSchema.methods.passwordCheck = async function(passedPassword){
 userSchema.methods.authentication = function(){
     const user = {
         _id: this._id,
+        role: this.role,
+        banned: this.banned,
         username: this.username
     };
 

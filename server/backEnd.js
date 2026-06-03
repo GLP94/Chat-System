@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import Chat from "./models/Chat.js"
 import User from "./models/User.js"
 
@@ -7,6 +5,9 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import { config } from "dotenv";
+
+config();
 
 const app = express();
 
@@ -21,7 +22,8 @@ const databaseConnection = async function(){
 
         const PORT = process.env.PORT;
         app.listen(PORT || 5000, () => {
-            console.log(`Server listening - PORT: ${PORT || 5000}`)
+            console.log(`Server listening`)
+            console.log(`${PORT || 5000}`)
         })
     }
     catch(err){
@@ -156,6 +158,24 @@ const handleNewPost = async function(req, res, next) {
 app.post("/api/posts", handleNewPost, async (req, res) => {
     res.status(201).json(res.locals.newPost);
 });
+
+/* Posts DELETE */
+
+const handleDeletePost = async function(req, res, next) {
+    const { _id } = req.params;
+    try{
+        const postDeleted = await Chat.deleteOne(_id);
+        if (!postDeleted) return res.status(200).json({message: "Post already deleted."});
+        next();
+    }
+    catch(err){
+        next(err);
+    }
+}
+
+app.delete("/api/posts", handleDeletePost, (req, res) => {
+    res.status(410).json({message: "Post deleted successfully."});
+})
 
 /* Error Handling */
 

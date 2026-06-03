@@ -22,7 +22,17 @@ export default function Chat({ loggedIn, username, setMessage }) {
         }
         catch (err) {
             setMessage(err.message);
-            console.error(err);
+            return console.error(err);
+        }
+    }
+
+    async function deletePost(_id) {
+        try{
+            axios.delete(`/api/posts/:${_id}`,);
+        }
+        catch(err){
+            setMessage(err.message);
+            return console.error(err);
         }
     }
 
@@ -50,7 +60,7 @@ export default function Chat({ loggedIn, username, setMessage }) {
                         :
                         (posts || []).map(p => (
                             <div key={p._id}>
-                                <p>
+                                <div>
                                     <span>{p.username}</span>
                                     -
                                     <span>{new Date(p.time).toLocaleDateString("en-US", {
@@ -60,8 +70,13 @@ export default function Chat({ loggedIn, username, setMessage }) {
                                         day: "numeric"
                                     })}
                                     </span>
-                                </p>
+                                </div>
                                 <p>{p.post}</p>
+                                <button 
+                                    OnClick={() => deletePost(p._id)}
+                                >
+                                    Delete
+                                </button>
                             </div>
                         ))}
             </section>

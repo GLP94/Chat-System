@@ -1,5 +1,8 @@
-export default function Loading(){
+export default function Loading({loading}){
     return(
-        <p>Loading...</p>
+        loading &&
+            <p>
+                Loading...
+            </p>
     )
 }
