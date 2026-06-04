@@ -98,6 +98,28 @@ const signIn = async function (req, res, next) {
 
 app.post("/api/singIn", signIn);
 
+/* User GET */
+
+const userGet = async function (req, res, next) {
+    try{
+        const {username} = req.params;
+        if (!username) return res.status(400).json({message: "Username required."})
+
+        const userFound = await User.findOne({username});
+        if (!userFound) return res.status(401).json({message: "Something went wrong with the fetching."});
+
+        res.locals.user = userFound;
+        next();
+    }
+    catch(err){
+        next(err);
+    }
+}
+
+app.get("/userPage/:username", userGet, (req, res) => {
+    res.status(200).json(res.locals.user);
+})
+
 /* Token Verification */
 
 const tokenVerification = async function(req, res, next){

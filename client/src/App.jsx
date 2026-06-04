@@ -50,7 +50,7 @@ export default function App() {
     }, []);
 
     return (
-        <Router >
+        <Router>
             <Header
                 loggedIn={loggedIn}
                 username={username}
